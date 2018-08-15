@@ -17,4 +17,37 @@
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
     </bean>
 
+    <bean id="kafkaConsumer" class="org.apache.kafka.clients.consumer.KafkaConsumer">
+        <constructor-arg type="java.util.Properties">
+            <props>
+                <prop key="bootstrap.servers">${bootstrap.servers}</prop>
+                <prop key="group.id">${group.id}</prop>
+                <prop key="key.deserializer">${key.deserializer}</prop>
+                <prop key="value.deserializer">${value.deserializer}</prop>
+            </props>
+        </constructor-arg>
+    </bean>
+
+    <bean id="kafkaConsumerBuilder" class="com.awin.recruitment.model.KafkaConsumerBuilder">
+        <constructor-arg name="kafkaConsumer" ref="kafkaConsumer"/>
+        <constructor-arg name="topic" value="${source.topic}"/>
+    </bean>
+
+    <bean id="kafkaProducer" class="org.apache.kafka.clients.producer.KafkaProducer">
+        <constructor-arg type="java.util.Properties">
+            <props>
+                <prop key="bootstrap.servers">${bootstrap.servers}</prop>
+                <prop key="group.id">${group.id}</prop>
+                <prop key="key.serializer">${key.serializer}</prop>
+                <prop key="value.serializer">${value.serializer}</prop>
+            </props>
+        </constructor-arg>
+    </bean>
+
+    <bean id="gsonParser" class="com.awin.recruitment.adapters.GsonParserAdapter"/>
+
+    <!--<bean id="transactionConsumer" class="com.awin.recruitment.model.ConsumerImpl">
+        <constructor-arg ref="gsonParser"/>
+    </bean>-->
+
 </beans>
