@@ -46,8 +46,18 @@
 
     <bean id="gsonParser" class="com.awin.recruitment.adapters.GsonParserAdapter"/>
 
-    <!--<bean id="transactionConsumer" class="com.awin.recruitment.model.ConsumerImpl">
-        <constructor-arg ref="gsonParser"/>
-    </bean>-->
+    <bean id="transactionQueue" class="java.util.concurrent.ArrayBlockingQueue">
+        <constructor-arg value="10"/>
+    </bean>
+
+    <bean id="transactionConsumer" class="com.awin.recruitment.model.ConsumerImpl">
+        <constructor-arg name="kafkaConsumerBuilder" ref="kafkaConsumerBuilder"/>
+        <constructor-arg name="jsonParser" ref="gsonParser"/>
+    </bean>
+
+    <bean id="transactionProducer" class="com.awin.recruitment.model.ProducerImpl">
+        <constructor-arg name="kafkaProducer" ref="kafkaProducer"/>
+        <constructor-arg name="jsonParser" ref="gsonParser"/>
+    </bean>
 
 </beans>

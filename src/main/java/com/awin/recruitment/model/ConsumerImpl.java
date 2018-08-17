@@ -7,17 +7,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 import java.time.Duration;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
-public class ConsumerImpl extends Thread implements Consumer<ConsumerRecord<Long, String>> {
+public class ConsumerImpl implements Consumer<Transaction>, Runnable {
     private KafkaConsumer<Long, String> kafkaConsumer;
-    private ArrayBlockingQueue<Transaction> data;
     private JsonParser jsonParser;
+    private Iterable<Transaction> queue;
 
-    public ConsumerImpl(KafkaConsumer<Long, String> kafkaConsumer, ArrayBlockingQueue<Transaction> data, JsonParser jsonParser) {
-        super("Consumer");
-        this.kafkaConsumer = kafkaConsumer;
-        this.data = data;
+    public ConsumerImpl(KafkaConsumerBuilder<Long, String> kafkaConsumerBuilder, JsonParser jsonParser) {
+        this.kafkaConsumer = kafkaConsumerBuilder.build();
         this.jsonParser = jsonParser;
     }
 
@@ -26,22 +24,27 @@ public class ConsumerImpl extends Thread implements Consumer<ConsumerRecord<Long
         while (true) {
             ConsumerRecords<Long, String> records = this.kafkaConsumer.poll(Duration.ofSeconds(10));
             if (records.count() > 0) {
-                consume(records);
+                for (ConsumerRecord<Long, String> record : records) {
+                    Transaction transaction = jsonParser.fromJson(record.value(), Transaction.class);
+                    if (transaction != null) {
+                        try {
+                            if (queue instanceof BlockingQueue<?>) {
+                                ((BlockingQueue<Transaction>) queue).put(transaction);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
         }
     }
 
     @Override
-    public void consume(Iterable<ConsumerRecord<Long, String>> messages) {
-        for (ConsumerRecord<Long, String> message : messages) {
-            Transaction transaction = jsonParser.fromJson(message.value(), Transaction.class);
-            if (transaction != null) {
-                try {
-                    this.data.put(transaction);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    public void consume(Iterable<Transaction> queue) {
+        this.queue = queue;
+
+        Thread thread = new Thread(this);
+        thread.start();
     }
 }

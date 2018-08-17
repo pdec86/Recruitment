@@ -7,29 +7,20 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class ProducerImpl extends Thread implements Producer<Transaction> {
+public class ProducerImpl implements Producer<Transaction>, Runnable {
     private KafkaProducer<Long, String> kafkaProducer;
-    private ArrayBlockingQueue<Transaction> data;
     private JsonParser jsonParser;
+    private Iterable<Transaction> queue;
 
-    public ProducerImpl(KafkaProducer<Long, String> kafkaProducer, ArrayBlockingQueue<Transaction> data, JsonParser jsonParser) {
-        super("Producer");
+    public ProducerImpl(KafkaProducer<Long, String> kafkaProducer, JsonParser jsonParser) {
         this.kafkaProducer = kafkaProducer;
-        this.data = data;
         this.jsonParser = jsonParser;
     }
 
     @Override
     public void run() {
         while (true) {
-            produce(data);
-        }
-    }
-
-    @Override
-    public void produce(Iterable<Transaction> messages) {
-        while (true) {
-            Transaction transaction = ((ArrayBlockingQueue<Transaction>) messages).poll();
+            Transaction transaction = ((ArrayBlockingQueue<Transaction>) queue).poll();
             if (transaction != null) {
                 String transactionJson = jsonParser.toJson(transaction);
                 final ProducerRecord<Long, String> record =
@@ -37,5 +28,13 @@ public class ProducerImpl extends Thread implements Producer<Transaction> {
                 kafkaProducer.send(record);
             }
         }
+    }
+
+    @Override
+    public void produce(Iterable<Transaction> queue) {
+        this.queue = queue;
+
+        Thread thread = new Thread(this);
+        thread.start();
     }
 }
