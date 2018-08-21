@@ -2,39 +2,26 @@ package com.awin.recruitment.model;
 
 import com.awin.recruitment.library.JsonParser;
 import com.awin.recruitment.library.Producer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import com.awin.recruitment.library.StreamWriter;
 
-import java.util.concurrent.ArrayBlockingQueue;
-
-public class ProducerImpl implements Producer<Transaction>, Runnable {
-    private KafkaProducer<Long, String> kafkaProducer;
+public class ProducerImpl implements Producer<TransactionFromStream> {
+    private StreamWriter<Long, String> streamWriter;
     private JsonParser jsonParser;
-    private Iterable<Transaction> queue;
 
-    public ProducerImpl(KafkaProducer<Long, String> kafkaProducer, JsonParser jsonParser) {
-        this.kafkaProducer = kafkaProducer;
+    public ProducerImpl(StreamWriter<Long, String> streamWriter, JsonParser jsonParser) {
+        this.streamWriter = streamWriter;
         this.jsonParser = jsonParser;
     }
 
     @Override
-    public void run() {
-        while (true) {
-            Transaction transaction = ((ArrayBlockingQueue<Transaction>) queue).poll();
-            if (transaction != null) {
-                String transactionJson = jsonParser.toJson(transaction);
-                final ProducerRecord<Long, String> record =
-                        new ProducerRecord<>("my-example-topic2", System.currentTimeMillis(), transactionJson);
-                kafkaProducer.send(record);
-            }
+    public void produce(Iterable<TransactionFromStream> messages) {
+        for (TransactionFromStream transactionFromStream : messages) {
+            Transaction transaction = new Transaction(
+                    transactionFromStream.getID(),
+                    transactionFromStream.getSaleDate(),
+                    transactionFromStream.getProductList());
+            String transactionJson = jsonParser.toJson(transaction);
+            streamWriter.send(Long.parseLong(transactionFromStream.getID()), transactionJson);
         }
-    }
-
-    @Override
-    public void produce(Iterable<Transaction> queue) {
-        this.queue = queue;
-
-        Thread thread = new Thread(this);
-        thread.start();
     }
 }

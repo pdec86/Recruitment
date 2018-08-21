@@ -1,7 +1,7 @@
 package com.awin.recruitment.adapters;
 
 import com.awin.recruitment.library.JsonParser;
-import com.awin.recruitment.model.Transaction;
+import com.awin.recruitment.model.TransactionFromStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -10,7 +10,7 @@ public class GsonParserAdapter implements JsonParser {
 
     public GsonParserAdapter() {
         GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(Transaction.class, new TransactionDeserializer());
+        gsonBuilder.registerTypeAdapter(TransactionFromStream.class, new TransactionFromStreamDeserializer());
         this.gson = gsonBuilder.create();
     }
 

@@ -50,14 +50,29 @@
         <constructor-arg value="10"/>
     </bean>
 
-    <bean id="transactionConsumer" class="com.awin.recruitment.model.ConsumerImpl">
+    <bean id="consumer" class="com.awin.recruitment.model.ConsumerImpl">
+        <constructor-arg name="jsonParser" ref="gsonParser"/>
+        <constructor-arg name="queue" ref="transactionQueue"/>
+    </bean>
+
+    <bean id="transactionStreamReader" class="com.awin.recruitment.services.TransactionStreamReader">
         <constructor-arg name="kafkaConsumerBuilder" ref="kafkaConsumerBuilder"/>
+        <constructor-arg name="consumer" ref="consumer"/>
+    </bean>
+
+    <bean id="streamWriterAdapter" class="com.awin.recruitment.adapters.StreamWriterAdapter">
+        <constructor-arg name="kafkaProducer" ref="kafkaProducer"/>
+        <constructor-arg name="topic" value="${destination.topic}"/>
+    </bean>
+
+    <bean id="producer" class="com.awin.recruitment.model.ProducerImpl">
+        <constructor-arg name="streamWriter" ref="streamWriterAdapter"/>
         <constructor-arg name="jsonParser" ref="gsonParser"/>
     </bean>
 
-    <bean id="transactionProducer" class="com.awin.recruitment.model.ProducerImpl">
-        <constructor-arg name="kafkaProducer" ref="kafkaProducer"/>
-        <constructor-arg name="jsonParser" ref="gsonParser"/>
+    <bean id="transactionProducer" class="com.awin.recruitment.services.TransactionProducer">
+        <constructor-arg name="queue" ref="transactionQueue"/>
+        <constructor-arg name="producer" ref="producer"/>
     </bean>
 
 </beans>

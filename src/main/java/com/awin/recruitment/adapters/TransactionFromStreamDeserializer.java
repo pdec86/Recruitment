@@ -1,16 +1,16 @@
 package com.awin.recruitment.adapters;
 
 import com.awin.recruitment.model.Product;
-import com.awin.recruitment.model.Transaction;
+import com.awin.recruitment.model.TransactionFromStream;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionDeserializer implements JsonDeserializer<Transaction> {
+public class TransactionFromStreamDeserializer implements JsonDeserializer<TransactionFromStream> {
     @Override
-    public Transaction deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+    public TransactionFromStream deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
 
         final JsonObject jsonObject = jsonElement.getAsJsonObject();
         final JsonElement jsonID = jsonObject.get("ID");
@@ -23,6 +23,6 @@ public class TransactionDeserializer implements JsonDeserializer<Transaction> {
             productList.add(product);
         }
 
-        return new Transaction(jsonID.getAsString(), jsonSaleDate.getAsString(), productList);
+        return new TransactionFromStream(jsonID.getAsString(), jsonSaleDate.getAsString(), productList);
     }
 }
