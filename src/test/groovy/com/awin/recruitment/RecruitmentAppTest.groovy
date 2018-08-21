@@ -44,7 +44,7 @@ class RecruitmentAppTest extends Specification {
         queue.poll() == transaction
     }
 
-    def "Producer consumes transactions from queue and produces new, enriched transaction"() {
+    def "Producer consumes transactions and produces new, enriched transactions"() {
 
         setup:
         StreamWriter streamWriterAdapter = Mock(StreamWriter.class)
